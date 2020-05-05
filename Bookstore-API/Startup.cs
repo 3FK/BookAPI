@@ -17,6 +17,8 @@ using System.Reflection;
 using System.IO;
 using Bookstore_API.Contracts;
 using Bookstore_API.Services;
+using AutoMapper;
+using Bookstore_API.Mappings;
 
 namespace Bookstore_API
 {
@@ -33,7 +35,7 @@ namespace Bookstore_API
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlite(
+                options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
             services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
@@ -42,6 +44,7 @@ namespace Bookstore_API
             {
                 o.AddPolicy("CorsPolicy", builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
             });
+            services.AddAutoMapper(typeof(Maps));
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo {
@@ -63,7 +66,7 @@ namespace Bookstore_API
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseDatabaseErrorPage();
+                //app.UseDatabaseErrorPage();
             }
             else
             {
