@@ -140,6 +140,12 @@ namespace Bookstore_API.Controllers
                     _logger.LogWarn("Empty request was submitted");
                     return BadRequest();
                 }
+                var isExists = await _authorRepository.IsExists(id);
+                if (!isExists)
+                {
+                    _logger.LogWarn($"Author id: {id} was not found");
+                    return NotFound();
+                }
                 if (!ModelState.IsValid)
                 {
                     _logger.LogWarn("Required data was not provided");
