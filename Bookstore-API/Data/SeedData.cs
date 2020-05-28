@@ -1,4 +1,4 @@
-﻿using System;
+﻿ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 
@@ -49,7 +49,7 @@ namespace Bookstore_API.Data
                 var result = await userManager.CreateAsync(user, "P@ssword1");
                 if (result.Succeeded)
                 {
-                    await userManager.AddToRoleAsync(user, "Customer ");
+                    await userManager.AddToRoleAsync(user, "Customer");
                 }
             }
         }

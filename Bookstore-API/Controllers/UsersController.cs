@@ -40,11 +40,59 @@ namespace Bookstore_API.Controllers
             _config = config;
         }
         /// <summary>
-        /// Login User
+        /// Endpoint for User registration
+        /// </summary>
+        /// <param name="userDTO"></param>
+        /// <returns></returns>
+        [AllowAnonymous]
+        [Route("registration")]
+        [HttpPost]
+        public async Task<IActionResult> Register([FromBody] UserDTO userDTO)
+        {
+            var location = GetController();
+            try
+            {
+                _logger.LogInfo($"{location}: User attempted to Register");
+
+                var UserName = userDTO.UserName;
+                var EmailAddress = userDTO.EmailAddress;
+                var Password = userDTO.Password;
+
+                var user = new IdentityUser
+                {
+                    Email = EmailAddress,
+                    UserName = UserName
+                };
+                var result = await _userManager.CreateAsync(user, Password);
+
+                if (!result.Succeeded)
+                {
+                    foreach(var error in result.Errors)
+                    {
+                        _logger.LogError($"{location}: {error.Code} - {error.Description}");
+                    }
+                    return InternalError($"{location}: {UserName} - Registration attempt if faield");
+                }
+                //if (result.Succeeded)
+                //{
+                //    await _userManager.AddToRoleAsync("Customer");
+                //}
+                _logger.LogInfo($"{location}: User: {UserName} Registration success");
+                await _userManager.AddToRoleAsync(user, "Customer");
+                return Created("login",new { result.Succeeded });
+            }
+            catch (Exception e)
+            {
+                return InternalError($"{location}: {e.Message} - {e.InnerException}");
+            }
+        }
+        /// <summary>
+        /// Endpoint for user Login
         /// </summary>
         /// <param name="userDTO"></param>
         /// <returns>User</returns>
         [AllowAnonymous]
+        [Route("login")]
         [HttpPost]
         public async Task<IActionResult> Login([FromBody] UserDTO userDTO)
         {
@@ -63,7 +111,7 @@ namespace Bookstore_API.Controllers
                     _logger.LogInfo($"{location}: User: {UserName} successfully Login");
                     var user = await _userManager.FindByNameAsync(UserName);
                     var tokenString = generateJSONWebToken(user);
-                    return Ok(new { token = tokenString});
+                    return Ok(new { token = tokenString.Result});
                 }
                 _logger.LogWarn($"{location}: User: {UserName} authenticated");
                 return Unauthorized(userDTO);
@@ -95,7 +143,7 @@ namespace Bookstore_API.Controllers
                 expires: DateTime.Now.AddMinutes(5),
                 signingCredentials: credentials
                 );
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            return new JwtSecurityTokenHandler().WriteToken(token).ToString();
         }
 
         private string GetController()

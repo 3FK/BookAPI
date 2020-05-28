@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bookstore-API", "Bookstore-API\Bookstore-API.csproj", "{8EA0ACEA-A2D9-428E-B1B8-42FEC546DED4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bookstore-UI", "Bookstore-UI\Bookstore-UI.csproj", "{C304318B-0A1A-467A-88C9-579F60F84F79}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,5 +15,9 @@ Global
 		{8EA0ACEA-A2D9-428E-B1B8-42FEC546DED4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8EA0ACEA-A2D9-428E-B1B8-42FEC546DED4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8EA0ACEA-A2D9-428E-B1B8-42FEC546DED4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C304318B-0A1A-467A-88C9-579F60F84F79}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C304318B-0A1A-467A-88C9-579F60F84F79}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C304318B-0A1A-467A-88C9-579F60F84F79}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C304318B-0A1A-467A-88C9-579F60F84F79}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
