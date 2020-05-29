@@ -17,6 +17,7 @@
     <Folder Include="Models\" />
     <Folder Include="Pages\Users\" />
     <Folder Include="Providers\" />
+    <Folder Include="Pages\Authors\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Blazored.LocalStorage" Version="2.1.5" />

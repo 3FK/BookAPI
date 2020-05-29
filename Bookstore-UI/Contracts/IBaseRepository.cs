@@ -9,7 +9,7 @@ namespace Bookstore_UI.Contracts
         Task<T> Get(String url, int id);
         Task<IList<T>> Get(String url);
         Task<bool> Create(String url, T obj);
-        Task<bool> Update(String url, T obj);
+        Task<bool> Update(String url, T obj, int id);
         Task<bool> Delete(String url, int id);
 
     }

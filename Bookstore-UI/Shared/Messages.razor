@@ -1,0 +1,10 @@
+﻿<div class="alert @ClassName">
+    @Message
+</div>
+
+@code {
+    [Parameter]
+    public string Message { get; set; }
+    [Parameter]
+    public string ClassName { get; set; }
+}

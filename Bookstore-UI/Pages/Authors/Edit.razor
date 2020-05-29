@@ -1,0 +1,75 @@
+﻿@page "/authors/edit/{Id}"
+@attribute [Authorize(Roles = "Administrator")]
+
+@inject IAuthorRepository _authorRepository
+@inject NavigationManager _navManager
+
+
+<h3 class="card-title">Edit author</h3>
+@if (isFailed)
+{
+    <Messages Message="Faield to update the author" ClassName="alert-danger" />
+}
+@if (Model == null)
+{
+    <Messages Message="Loading author..." ClassName="alert-dismissible alert-secondary" />
+}
+else
+{
+    <EditForm Model="Model" OnValidSubmit="HOnEdit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div class="form-group">
+            <label for="first-name">First Name</label>
+            <InputText Id="first-name" class="form-control" @bind-Value="Model.Firstname" />
+            <ValidationMessage For="@(() => Model.Firstname)" />
+        </div>
+        <div class="form-group">
+            <label for="last-name">Last Name</label>
+            <InputText Id="last-name" class="form-control" @bind-Value="Model.Lastname" />
+            <ValidationMessage For="@(() => Model.Lastname)" />
+        </div>
+        <div class="form-group">
+            <label for="bio">Biography</label>
+            <InputText Id="bio" class="form-control" @bind-Value="Model.Bio" />
+            <ValidationMessage For="@(() => Model.Bio)" />
+        </div>
+        <button class="btn btn-primary" type="submit"> Submit</button>
+        <button class="btn btn-outline-secondary" @onclick="hOnGoBack">Author List</button>
+    </EditForm>
+}
+
+
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    private Author Model = new Author();
+    private bool isFailed = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        int id = int.Parse(Id);
+        Model = await _authorRepository.Get(Endpoints.AuthorsEndpoint, id);
+    }
+    private void hOnGoBack()
+    {
+        _navManager.NavigateTo("/authors/");
+    }
+
+    private async Task HOnEdit()
+    {
+        bool response = await _authorRepository.Update(Endpoints.AuthorsEndpoint, Model, Model.Id);
+
+        if (response)
+        {
+            hOnGoBack();
+        }
+        else
+        {
+            isFailed = true;
+        }
+
+    }
+}
