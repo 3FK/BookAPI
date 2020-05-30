@@ -1,0 +1,144 @@
+﻿@page "/books/create/"
+@attribute [Authorize(Roles = "Administrator")]
+
+@inject IBookRepository _bookRepository
+@inject IAuthorRepository _authorRepository
+@inject IFileUpload _fileUpload 
+@inject NavigationManager _navManager
+@using System.IO
+
+<h3 class="card-title">Create book</h3>
+@if (isFailed)
+{
+    <Messages Message="Faield to create the book" ClassName="alert-danger" />
+}
+<EditForm Model="Model" OnValidSubmit="HOnCreate">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="form-group">
+        <label for="title">Title</label>
+        <InputText Id="title" class="form-control" @bind-Value="Model.Title" />
+        <ValidationMessage For="@(() => Model.Title)" />
+    </div>
+    <div class="form-group">
+        <label for="isbn">ISBN</label>
+        <InputText Id="isbn" class="form-control" @bind-Value="Model.Isbn" />
+        <ValidationMessage For="@(() => Model.Isbn)" />
+    </div>
+    <div class="form-group">
+        <label for="year">Year</label>
+        <InputNumber Id="year" class="form-control" @bind-Value="Model.Year" />
+        <ValidationMessage For="@(() => Model.Year)" />
+    </div>
+    <div class="form-group">
+        <label for="author">Author</label>
+        <select @bind="Model.AuthorId" class="form-control" id="author">
+            <option value="">-- Select author --</option>
+            @if (authors != null)
+            {
+                @foreach (var author in authors)
+                {
+                    <option value="@author.Id">@author.Firstname @author.Lastname</option>
+                }
+            }
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="price">Price</label>
+        <InputNumber Id="price" class="form-control" @bind-Value="Model.Price" />
+        <ValidationMessage For="@(() => Model.Price)" />
+    </div>
+    <div class="form-group">
+        <label for="summary">Summary</label>
+        <InputTextArea Id="summary" class="form-control" @bind-Value="Model.Summary" />
+        <ValidationMessage For="@(() => Model.Summary)" />
+    </div>
+    <div class="form-group">
+        <label for="image">Cover Image</label>
+        <InputFile Id="image" class="form-control" OnChange="HOnFileInput" />
+        @if (isInvalidFileType)
+        {
+            <Messages Message="Invalid file type" ClassName="alert-danger" />
+        }
+        @if (!string.IsNullOrWhiteSpace(ImageURL))
+        {
+            <img src="@ImageURL" style="width:100px; height:100px" />
+        }
+    </div>
+    <button class="btn btn-primary" type="submit"> Submit</button>
+    <button class="btn btn-outline-secondary" @onclick="hOnGoBack">Book List</button>
+</EditForm>
+
+@code {
+    private Book Model = new Book();
+    private IList<Author> authors;
+    private bool isFailed = false;
+    private IFileListEntry file;
+    private string ImageURL;
+    private bool isInvalidFileType = false;
+    private MemoryStream msFile;
+
+    protected override async Task OnInitializedAsync()
+    {
+        authors = await _authorRepository.Get(Endpoints.AuthorsEndpoint);
+    }
+    private void hOnGoBack()
+    {
+        _navManager.NavigateTo("/books/");
+    }
+
+    private async Task HOnCreate()
+    {
+        if (!isInvalidFileType)
+        {
+            if(file != null)
+            {
+                var ext = Path.GetExtension(file.Name);
+                var imgId = Guid.NewGuid().ToString().Replace("-", "");
+                var imageName = $"{imgId}{ext}";
+
+                await _fileUpload.UploadFile(file, imageName);
+
+                Model.Image = imageName;
+            }
+
+            bool response = await _bookRepository.Create(Endpoints.BooksEndpoint, Model);
+
+            if (response)
+            {
+                hOnGoBack();
+            }
+            else
+            {
+                isFailed = true;
+            }
+        }
+    }
+    private async Task HOnFileInput(IFileListEntry[] files)
+    {
+        file = files.FirstOrDefault();
+        if(file != null)
+        {
+            var name = file.Name;
+            if(name.Contains("jpg") || name.Contains("png") || name.Contains("jpeg"))
+            {
+                msFile = new MemoryStream();
+                await file.Data.CopyToAsync(msFile);
+
+                var reader = new StreamReader(file.Data);
+                var imageBase64Data = Convert.ToBase64String(msFile.ToArray());
+                ImageURL = string.Format("data:image/png;base64,{0}", imageBase64Data);
+                isInvalidFileType = false;
+            }
+            else
+            {
+                isInvalidFileType = true;
+                ImageURL = string.Empty;
+            }
+        }
+        else
+        {
+            isInvalidFileType = false;
+        }
+    }
+}

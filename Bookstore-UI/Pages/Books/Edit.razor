@@ -1,0 +1,172 @@
+﻿@page "/books/edit/{Id}"
+@attribute [Authorize(Roles = "Administrator")]
+
+@inject IBookRepository _bookRepository
+@inject IAuthorRepository _authorRepository
+@inject IFileUpload _fileUpload
+@inject NavigationManager _navManager
+@using System.IO
+
+<h3 class="card-title">book detail</h3>
+@if (isFailed)
+{
+    <Messages Message="Faield to update the book" ClassName="alert-danger" />
+}
+@if (int.Parse(Id) < 1 || string.IsNullOrWhiteSpace(Id))
+{
+    <Messages Message="Invalid selection" ClassName="alert-danger" />
+}
+else if (Model == null)
+{
+    <Messages Message="Loading...." ClassName="alert-dismissible alert-secondary" />
+}
+else
+{
+    <EditForm Model="Model" OnValidSubmit="HOnEdit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div class="form-group">
+            <label for="title">Title</label>
+            <InputText Id="title" class="form-control" @bind-Value="Model.Title" />
+            <ValidationMessage For="@(() => Model.Title)" />
+        </div>
+        <div class="form-group">
+            <label for="isbn">ISBN</label>
+            <InputText Id="isbn" class="form-control" @bind-Value="Model.Isbn" />
+            <ValidationMessage For="@(() => Model.Isbn)" />
+        </div>
+        <div class="form-group">
+            <label for="year">Year</label>
+            <InputNumber Id="year" class="form-control" @bind-Value="Model.Year" />
+            <ValidationMessage For="@(() => Model.Year)" />
+        </div>
+        <div class="form-group">
+            <label for="author">Author</label>
+            <select @bind="Model.AuthorId" class="form-control" id="author">
+                <option value="">-- Select author --</option>
+                @if (authors != null)
+                {
+                    @foreach (var author in authors)
+                    {
+                        <option value="@author.Id">@author.Firstname @author.Lastname</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="price">Price</label>
+            <InputNumber Id="price" class="form-control" @bind-Value="Model.Price" />
+            <ValidationMessage For="@(() => Model.Price)" />
+        </div>
+        <div class="form-group">
+            <label for="summary">Summary</label>
+            <InputTextArea Id="summary" class="form-control" @bind-Value="Model.Summary" />
+            <ValidationMessage For="@(() => Model.Summary)" />
+        </div>
+        <div class="form-group">
+            <label for="image">Cover Image</label>
+            <InputFile Id="image" class="form-control" OnChange="HOnFileInput" />
+            @if (isInvalidFileType)
+            {
+                <Messages Message="Invalid file type" ClassName="alert-danger" />
+            }
+            @if (!string.IsNullOrWhiteSpace(ImageURL))
+            {
+                <img src="@ImageURL" style="width:100px; height:100px" />
+            }
+            else if (!string.IsNullOrWhiteSpace(Model.Image))
+            {
+                <img src="@Model.Image" style="width:100px; height:100px" />
+            }
+        </div>
+        <button class="btn btn-primary" type="submit"> Submit</button>
+        <button class="btn btn-outline-secondary" @onclick="hOnGoBack">Book List</button>
+    </EditForm>
+}
+
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    private Book Model = new Book();
+    private bool isInvalidFileType = false;
+    private IList<Author> authors;
+    private bool isFailed = false;
+    private IFileListEntry file;
+    private string ImageURL;
+    private MemoryStream msFile;
+    private bool isFileChanged = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        int id = int.Parse(Id);
+        Model = await _bookRepository.Get(Endpoints.BooksEndpoint, id);
+        authors = await _authorRepository.Get(Endpoints.AuthorsEndpoint);
+    }
+    private void hOnGoBack()
+    {
+        _navManager.NavigateTo("/books/");
+    }
+
+    private async Task HOnEdit()
+    {
+        if (!isInvalidFileType)
+        {
+            if (file != null)
+            {
+                var ext = Path.GetExtension(file.Name);
+                var imgId = Guid.NewGuid().ToString().Replace("-", "");
+                var imageName = $"{imgId}{ext}";
+                _fileUpload.RemoveFile(Model.Image);
+                await _fileUpload.UploadFile(file, imageName);
+
+                Model.Image = imageName;
+            }
+            else if (isFileChanged && file == null)
+            {
+                _fileUpload.RemoveFile(Model.Image);
+                Model.Image = string.Empty;
+            }
+
+            bool response = await _bookRepository.Update(Endpoints.BooksEndpoint, Model, Model.Id);
+
+            if (response)
+            {
+                hOnGoBack();
+            }
+            else
+            {
+                isFailed = true;
+            }
+        }
+    }
+    private async Task HOnFileInput(IFileListEntry[] files)
+    {
+        file = files.FirstOrDefault();
+        isFileChanged = true;
+        if (file != null)
+        {
+            var name = file.Name;
+            if (name.Contains("jpg") || name.Contains("png") || name.Contains("jpeg"))
+            {
+                msFile = new MemoryStream();
+                await file.Data.CopyToAsync(msFile);
+
+                var reader = new StreamReader(file.Data);
+                var imageBase64Data = Convert.ToBase64String(msFile.ToArray());
+                ImageURL = string.Format("data:image/png;base64,{0}", imageBase64Data);
+                isInvalidFileType = false;
+            }
+            else
+            {
+                isInvalidFileType = true;
+                ImageURL = string.Empty;
+            }
+        }
+        else
+        {
+            isInvalidFileType = false;
+        }
+    }
+}

@@ -3,12 +3,13 @@
 
 @inject IAuthorRepository _authorRepository
 @inject NavigationManager _navManager
+@inject IToastService _toastService
 
 
 <h3 class="card-title">Create author</h3>
 @if (isFailed)
 {
-    <Messages Message="Faield to update the author" ClassName="alert-danger" />
+    <Messages Message="Faield to create the author" ClassName="alert-danger" />
 }
 <EditForm Model="Model" OnValidSubmit="HOnCreate">
     <DataAnnotationsValidator />
@@ -37,11 +38,6 @@
     private Author Model = new Author();
     private bool isFailed = false;
 
-    //protected override async Task OnInitializedAsync()
-    //{
-    //    int id = int.Parse(Id);
-    //    Model = await _authorRepository.Get(Endpoints.AuthorsEndpoint, id);
-    //}
     private void hOnGoBack()
     {
         _navManager.NavigateTo("/authors/");
@@ -53,6 +49,7 @@
 
         if (response)
         {
+            _toastService.ShowSuccess("Author created successfully");
             hOnGoBack();
         }
         else

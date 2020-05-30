@@ -48,6 +48,8 @@ namespace Bookstore_API.DTOs
         public string Title { get; set; }
 
         public int? Year { get; set; }
+        [Required]
+        public string Isbn { get; set; }
 
         [StringLength(500)]
         public string Summary { get; set; }
